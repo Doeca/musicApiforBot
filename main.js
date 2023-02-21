@@ -133,7 +133,7 @@ router.get('/:platform/lrcUrl', async (ctx, next) => {
     switch (platform) {
         case 'kuwo':
             try {
-                wp_musicapi["/v1/kuwo/lyric"]({ rid: id }).then(
+                await wp_musicapi["/v1/kuwo/lyric"]({ rid: id }).then(
                     res => { ctx.response.body = res.lyric_str }
                 );
             } catch (error) {
