@@ -1,29 +1,12 @@
-// 引入 wp_MusicApi
 const Koa = require('koa');
 const cors = require('koa2-cors');
 const axios = require('axios');
 const router = require('koa-router')();
 const app = new Koa();
 const wp_musicapi = require("./wp_MusicApi");
-const pfms = ['qq', 'migu', 'kuwo', 'kugou', 'wy'];
-const act = require('./wy');
 const domain = "https://musicApi.doeca.cc"
 const wyApi = "https://netease.doeca.cc"
 
-
-axios.get(`${wyApi}/song/url/v1?id=2012379727&level=higher`).then(res => {
-    console.log(res)
-})
-
-// 咪咕搜索
-
-// wp_musicapi["/v1/qq/login_scan"]().then(res => {
-//     console.log(res.type);
-// });
-
-//wp_musicapi["/v1/qq/song"]({ id: '004O1DHG4MjYOi', br: '320' }).then(res => console.log(res));
-// QQ搜索
-//wp_musicapi["/v1/kuwo/search"]({ key: '千里之外 周杰伦' }).then(res => console.log(res));
 
 
 app.use(async (ctx, next) => {
@@ -174,11 +157,12 @@ router.get('/:platform/lrcUrl', async (ctx, next) => {
             }
         default:
     }
-    //https://antiserver.kuwo.cn/anti.s?type=convert_url&format=mp3&response=url&rid=235497
+
+
 });
 
 // add router middleware:
 app.use(router.routes());
 app.use(cors());
 
-app.listen(3000);
+app.listen(3001);
