@@ -1,17 +1,184 @@
 // 引入 wp_MusicApi
+const Koa = require('koa');
+const cors = require('koa2-cors');
+const axios = require('axios');
+const router = require('koa-router')();
+const app = new Koa();
 const wp_musicapi = require("./wp_MusicApi");
+const pfms = ['qq', 'migu', 'kuwo', 'kugou', 'wy'];
+const act = require('./wy');
+const domain = "https://musicApi.doeca.cc"
+const wyApi = "https://netease.doeca.cc"
+
+
+axios.get(`${wyApi}/song/url/v1?id=2012379727&level=higher`).then(res => {
+    console.log(res)
+})
 
 // 咪咕搜索
-wp_musicapi["/v1/migu/song"]({br: 1}).then(res => console.log(res));
+
+// wp_musicapi["/v1/qq/login_scan"]().then(res => {
+//     console.log(res.type);
+// });
+
+//wp_musicapi["/v1/qq/song"]({ id: '004O1DHG4MjYOi', br: '320' }).then(res => console.log(res));
 // QQ搜索
-wp_musicapi["/v1/qq/search"]({key: '周杰伦'}).then(res => console.log(res));
+//wp_musicapi["/v1/kuwo/search"]({ key: '千里之外 周杰伦' }).then(res => console.log(res));
 
-// 酷我搜索
-(async () => {
-    let res = await wp_musicapi["/v1/kuwo/search"]({
-        from: 'pc',
-        key: '许嵩'
-    });
 
-    console.log(res);
-})();
+app.use(async (ctx, next) => {
+    console.log(`Process ${ctx.request.method} ${ctx.request.url}...`);
+    await next();
+});
+
+
+// add url-route:
+router.get('/:platform/detail', async (ctx, next) => {
+    var platform = ctx.params.platform;
+    var id = ctx.request.query.id;
+    id = id.toString().trim();
+
+
+    switch (platform) {
+        case "qq":
+            await wp_musicapi["/v1/qq/songDetail"]({ id: id }).then(res => {
+                console.log(res)
+                if (res.result != 100) {
+                    ctx.rest({
+                        result: 500,
+                        errMsg: '[qq] unknown error',
+                    });
+                    return;
+                }
+                let line = res.data.extras.name + " " + res.data.track_info.singer[0].name;
+                console.log(line);
+                wp_musicapi['/v1/kuwo/search']({ key: line }).then(res => {
+                    console.log(res)
+                    if (res.data.total == 0) {
+                        ctx.status = 404
+                        ctx.body = "Not Found"
+                        return;
+                    }
+                    rtx = {
+                        name: res.data.list[0].name,
+                        author: res.data.list[0].artist,
+                        playUrl: `${domain}/kuwo/songUrl?id=${res.data.list[0].rid}`,
+                        lrcUrl: `${domain}/kuwo/lrcUrl?id=${res.data.list[0].rid}`,
+                        cover: res.data.list[0].albumpic
+                    }
+
+                    ctx.response.body = JSON.stringify(rtx);
+                    return
+                })
+
+            });
+
+            break;
+        case 'wy':
+            try {
+                await axios.get(`${wyApi}/song/detail?ids=${id}`).then(res => {
+                    let resp = res.data
+                    console.log(resp);
+                    if (resp.code != 200 || resp.songs.length == 0)
+                        throw -1;
+                    let authorName = "";
+
+                    resp.songs[0].ar.forEach((v, i) => {
+                        authorName = authorName + v.name + (i + 1 == resp.songs[0].ar.length ? "" : "/");
+                    });
+
+                    let rtx = {
+                        name: resp.songs[0].name,
+                        author: authorName,
+                        playUrl: `${domain}/wy/songUrl?id=${id}`,
+                        lrcUrl: `${domain}/wy/lrcUrl?id=${id}`,
+                        cover: resp.songs[0].al.picUrl
+                    }
+
+                    ctx.response.body = JSON.stringify(rtx);
+                    return;
+                })
+            }
+            catch (err) {
+                ctx.status = 404
+                ctx.body = "Not Found"
+                return;
+            }
+            break;
+
+        case 'kuwo':
+            break;
+        default:
+            ctx.response.body = JSON.stringify({ "res": "-1" });
+    }
+
+
+});
+
+router.get('/:platform/songUrl', async (ctx, next) => {
+    var platform = ctx.params.platform;
+    var id = ctx.request.query.id;
+    id = id.toString().trim();
+
+    switch (platform) {
+        case 'kuwo':
+            try {
+                await axios.get(`https://antiserver.kuwo.cn/anti.s?type=convert_url&format=mp3&response=url&rid=${id}`).then(res => {
+                    ctx.response.redirect(res.data);
+                })
+            } catch (error) {
+                ctx.status = 404;
+            }
+            break;
+        case 'wy':
+            try {
+                await axios.get(`${wyApi}/song/url/v1?id=${id}&level=higher`).then(res => {
+                    let resp = res.data
+                    if (resp.code != 200 || resp.data.length == 0)
+                        throw -1;
+                    url = resp.data[0].url;
+                    ctx.response.redirect(url);
+                })
+            } catch (error) {
+                ctx.status = 404;
+            }
+        default:
+    }
+    //https://antiserver.kuwo.cn/anti.s?type=convert_url&format=mp3&response=url&rid=235497
+});
+
+router.get('/:platform/lrcUrl', async (ctx, next) => {
+    var platform = ctx.params.platform;
+    var id = ctx.request.query.id;
+    id = id.toString().trim();
+    switch (platform) {
+        case 'kuwo':
+            try {
+                wp_musicapi["/v1/kuwo/lyric"]({ rid: id }).then(
+                    res => { ctx.response.body = res.lyric_str }
+                );
+            } catch (error) {
+                ctx.status = 404;
+            }
+            break;
+        case 'wy':
+            try {
+                await axios.get(`${wyApi}/lyric?id=${id}`).then(res => {
+                    let resp = res.data
+                    if (res.status != 200)
+                        throw -1;
+                    ctx.response.body = resp.lrc.lyric;
+                })
+            } catch (error) {
+                ctx.status = 404;
+            }
+        default:
+    }
+    //https://antiserver.kuwo.cn/anti.s?type=convert_url&format=mp3&response=url&rid=235497
+});
+
+// add router middleware:
+app.use(router.routes());
+app.use(cors());
+
+app.listen(3000);
