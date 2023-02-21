@@ -24,6 +24,7 @@ router.get('/:platform/detail', async (ctx, next) => {
 
     switch (platform) {
         case "qq":
+            let line = ""
             await wp_musicapi["/v1/qq/songDetail"]({ id: id }).then(res => {
                 if (res.result != 100) {
                     ctx.rest({
@@ -32,27 +33,26 @@ router.get('/:platform/detail', async (ctx, next) => {
                     });
                     return;
                 }
-                let line = res.data.extras.name + " " + res.data.track_info.singer[0].name;
-                wp_musicapi['/v1/kuwo/search']({ key: line }).then(res => {
-                    if (res.data.total == 0) {
-                        ctx.status = 404
-                        ctx.body = "Not Found"
-                        return;
-                    }
-                    rtx = {
-                        name: res.data.list[0].name,
-                        author: res.data.list[0].artist,
-                        playUrl: `${domain}/kuwo/songUrl?id=${res.data.list[0].rid}`,
-                        lrcUrl: `${domain}/kuwo/lrcUrl?id=${res.data.list[0].rid}`,
-                        cover: res.data.list[0].albumpic
-                    }
-
-                    ctx.response.body = JSON.stringify(rtx);
-                    return
-                })
-
+                line = res.data.extras.name + " " + res.data.track_info.singer[0].name;
             });
 
+            await wp_musicapi['/v1/kuwo/search']({ key: line }).then(res => {
+                if (res.data.total == 0) {
+                    ctx.status = 404
+                    ctx.body = "Not Found"
+                    return;
+                }
+                rtx = {
+                    name: res.data.list[0].name,
+                    author: res.data.list[0].artist,
+                    playUrl: `${domain}/kuwo/songUrl?id=${res.data.list[0].rid}`,
+                    lrcUrl: `${domain}/kuwo/lrcUrl?id=${res.data.list[0].rid}`,
+                    cover: res.data.list[0].albumpic
+                }
+
+                ctx.response.body = JSON.stringify(rtx);
+                return
+            })
             break;
         case 'wy':
             try {
@@ -160,5 +160,5 @@ router.get('/:platform/lrcUrl', async (ctx, next) => {
 // add router middleware:
 app.use(router.routes());
 app.use(cors());
-
+console.log("start listening at 3001")
 app.listen(3001);
