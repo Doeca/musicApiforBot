@@ -127,6 +127,7 @@ router.get('/:platform/songUrl', async (ctx, next) => {
 });
 
 router.get('/:platform/lrcUrl', async (ctx, next) => {
+    ctx.set({ 'Access-Control-Allow-Origin': '*' });
     var platform = ctx.params.platform;
     var id = ctx.request.query.id;
     id = id.toString().trim();
