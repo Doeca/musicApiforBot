@@ -25,7 +25,6 @@ router.get('/:platform/detail', async (ctx, next) => {
     switch (platform) {
         case "qq":
             await wp_musicapi["/v1/qq/songDetail"]({ id: id }).then(res => {
-                console.log(res)
                 if (res.result != 100) {
                     ctx.rest({
                         result: 500,
@@ -34,9 +33,7 @@ router.get('/:platform/detail', async (ctx, next) => {
                     return;
                 }
                 let line = res.data.extras.name + " " + res.data.track_info.singer[0].name;
-                console.log(line);
                 wp_musicapi['/v1/kuwo/search']({ key: line }).then(res => {
-                    console.log(res)
                     if (res.data.total == 0) {
                         ctx.status = 404
                         ctx.body = "Not Found"
@@ -61,7 +58,6 @@ router.get('/:platform/detail', async (ctx, next) => {
             try {
                 await axios.get(`${wyApi}/song/detail?ids=${id}`).then(res => {
                     let resp = res.data
-                    console.log(resp);
                     if (resp.code != 200 || resp.songs.length == 0)
                         throw -1;
                     let authorName = "";
