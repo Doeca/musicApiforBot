@@ -4,7 +4,7 @@ const axios = require('axios');
 const router = require('koa-router')();
 const app = new Koa();
 const wp_musicapi = require("./wp_MusicApi");
-const domain = "https://musicApi.doeca.cc:20050"
+const domain = "http://musicapi.doeca.cc:3001"
 const wyApi = "https://netease.doeca.cc"
 
 
