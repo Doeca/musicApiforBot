@@ -8,7 +8,6 @@ const domain = "http://musicapi.doeca.cc:3001"
 const wyApi = "https://netease.doeca.cc"
 
 
-
 app.use(async (ctx, next) => {
     console.log(`Process ${ctx.request.method} ${ctx.request.url}...`);
     await next();
@@ -34,6 +33,7 @@ router.get('/:platform/detail', async (ctx, next) => {
                     return;
                 }
                 line = res.data.extras.name + " " + res.data.track_info.singer[0].name;
+                console.log(line);
             });
 
             await wp_musicapi['/v1/kuwo/search']({ key: line }).then(res => {
@@ -49,6 +49,7 @@ router.get('/:platform/detail', async (ctx, next) => {
                     lrcUrl: `${domain}/kuwo/lrcUrl?id=${res.data.list[0].rid}`,
                     cover: res.data.list[0].albumpic
                 }
+                console.log(rtx);
 
                 ctx.response.body = JSON.stringify(rtx);
                 return

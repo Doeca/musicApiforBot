@@ -9,7 +9,7 @@ const target = () => {
             if (resp.data.data.code != 200)
                 throw 'Call Fail';
 
-            if (resp.data.data.account.status == -10) {
+            if (resp.data.data.account.status != 0) {
                 if (loadStatus == 1) {
                     //notify to scan login
                     try {
