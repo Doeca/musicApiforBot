@@ -6,7 +6,7 @@ const app = new Koa();
 const wp_musicapi = require("./wp_MusicApi");
 const domain = "http://musicapi.doeca.cc:3001"
 const wyApi = "https://netease.doeca.cc"
-
+const loadStatus = require('./wy')
 
 app.use(async (ctx, next) => {
     console.log(`Process ${ctx.request.method} ${ctx.request.url}...`);

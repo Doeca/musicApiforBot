@@ -1,5 +1,5 @@
 const axios = require('axios');
-const prefix = "https://netease.doeca.cc"
+const prefix = "http://netease.doeca.cc"
 const notifyUrl = "http://tun4.cquluna.top:3002/notifyLogout"
 let loadStatus = 1;
 
