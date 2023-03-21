@@ -7,11 +7,12 @@ let loadStatus = 1;
 const target = () => {
     try {
         axios.get(`${prefix}/song/url?id=29713754`).then(resp => {
-            if (resp.data.data.code != 200)
+            console.log(resp.data);
+            if (resp.data.data[0].code != 200)
                 throw 'Call Fail';
 
 
-            if (resp.data.data.size != 24101355) {
+            if (resp.data.data[0].size != 24101355) {
                 if (loadStatus == 1) {
                     //notify to scan login
                     try {
