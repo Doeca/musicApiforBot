@@ -9,6 +9,22 @@ const target = () => {
             if (resp.data.data.code != 200)
                 throw 'Call Fail';
 
+            if (resp.data.data.account == null) {
+                if (loadStatus == 1) {
+                    //notify to scan login
+                    try {
+                        fetch(notifyUrl, { mode: "cors" }).then(res => { })
+                    } catch (error) {
+
+                    }
+                    loadStatus = 0;
+                    console.log("[Logout] 网易云登陆已失效，需要重新登陆")
+                }
+                return;
+            } else {
+                loadStatus = 1;
+            }
+
             if (resp.data.data.account.status != 0) {
                 if (loadStatus == 1) {
                     //notify to scan login
